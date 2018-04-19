@@ -1,0 +1,119 @@
+package nim;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+public class NimSpiel {
+    
+    private Spieler gewinner;
+    private Spieler spieler;
+    private Spielsteine spielsteine;
+    private String spielregeln;
+    private List<Spieler> spielerdaten;
+    private int dran;
+    private int spielrunden;
+    
+    public NimSpiel(String name) {
+        
+        this.spieler = new Spieler(name, false);
+        Spieler computer = new Spieler("Computer", true);
+        
+        this.spielerdaten = new ArrayList<>();
+        this.spielerdaten.add(spieler);
+        this.spielerdaten.add(computer);
+        
+        this.spielsteine = new Spielsteine();
+        
+        this.spielregeln ="Willkommen zum Nim-Spiel. Du und der Computer werden jetzt von einem Steinhaufen abwechselnd 1-3 Steine runternehmen. Wer den letzten Stein nimmt verliert.";
+        this.spielrunden=0;
+               
+        randomStartspieler();
+    }
+    
+    public void optimalerZug(){
+        int steineGenommen=3;
+        boolean valid=false;
+        while (!valid){
+            for(int i=0; i<4; i++){
+                if ((spielsteine.getSteine()-i+1)%4!=1 && i<3){
+                    spielsteine.setSteine(spielsteine.getSteine()-steineGenommen);
+                    steineGenommen=i;
+                    valid=true;
+                    break;
+                }
+                if (i==3){
+                    valid=true;
+                }
+            }
+        }
+        
+        System.out.println("Der Computer hat: "+steineGenommen+" Steine entnommen");
+    }
+    
+    public void zieheSteine(){
+        boolean valid=false;
+        int steineInput=0;
+        while (!valid){
+            try{
+            BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
+            System.out.print("Wie viele Steine entfernen? 1? 2? 3?: ");
+            steineInput=Integer.parseInt(bufferRead.readLine());
+            valid=spielsteine.ueberpruefe_Zugsteine(steineInput);
+            }   
+            catch(IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
+        spielsteine.setSteine(spielsteine.getSteine()-steineInput);
+    }
+    
+    public void randomStartspieler() { 
+        this.dran= 0 + (int)(Math.random() * 1);
+    }
+
+    public void spielen() {
+        System.out.println(spielregeln);
+        while(spielsteine.getSteine()>0){
+            System.out.print("\nAktueller Spieler: "+spielerdaten.get(dran).getName());
+            System.out.println("\t\tSteine im Steinhaufen: "+spielsteine.getSteine());
+            if (spielerdaten.get(dran).isComputer()){
+			optimalerZug();
+            }else{
+                zieheSteine();
+            }
+            spielrunden++;
+            naechsterSpieler();
+        }
+        gewinner=spielerdaten.get(dran);
+        System.out.println("Gewinner ist: "+gewinner.getName());
+        System.out.println("Gespielte Runden: "+spielrunden);
+        String input="notValid";
+        while (!input.equals("Y") && !input.equals("N")){
+            try{
+            System.out.println("erneut spielen? Y/N?");
+            BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
+            input = (String) bufferRead.readLine();
+            }   
+            catch(IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
+        if(input.equals("Y")){
+            neuesSpiel();
+        }
+    }
+    
+    public void naechsterSpieler(){
+        this.dran=(dran+1)% this.spielerdaten.size();
+    }
+    
+    public void neuesSpiel(){
+        NimSpiel nim2=new NimSpiel(spielerdaten.get(0).getName());
+        nim2.spielen();
+    }
+}
